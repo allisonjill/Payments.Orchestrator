@@ -34,43 +34,47 @@ public class PaymentService
 
     public async Task<Payment?> ConfirmPaymentAsync(Guid id)
     {
-        var intent = await _repository.GetAsync(id);
-        if (intent == null) return null;
+        var payment = await _repository.GetAsync(id);
+        if (payment == null) return null;
 
-        // Idempotency/Concurrency check: if already succeeded, just return it
-        if (intent.Status == PaymentStatus.Succeeded)
+        if (payment.Status == PaymentStatus.Captured)
         {
-            _logger.LogInformation("Payment {PaymentId} already succeeded", id);
-            return intent;
+            _logger.LogInformation("Payment {PaymentId} already captured", id);
+            return payment;
         }
 
-        // Domain validation for transition
-        if (intent.Status != PaymentStatus.Created)
+        if (payment.Status != PaymentStatus.Initiated)
         {
-            throw new InvalidOperationException($"Payment {id} is in state {intent.Status} and cannot be confirmed.");
+            throw new InvalidOperationException($"Payment {id} is in state {payment.Status} and cannot be processed.");
         }
 
         try
         {
-            intent.MarkProcessing();
-            await _repository.SaveAsync(intent);
+            // 1. Validate
+            payment.Validate();
+            await _repository.SaveAsync(payment);
 
+            // 2. Authorize
             _logger.LogInformation("Initiating gateway charge for {PaymentId}", id);
-            var result = await _gateway.ChargeAsync(intent.Amount, intent.Currency, intent.Id);
+            var result = await _gateway.ChargeAsync(payment.Amount, payment.Currency, payment.Id);
 
             if (result.Success)
             {
-                intent.MarkSucceeded(result.TransactionId!);
-                _logger.LogInformation("Payment {PaymentId} succeeded. TransactionId: {TransactionId}", id, result.TransactionId);
+                payment.Authorize(result.TransactionId!);
+                await _repository.SaveAsync(payment);
+
+                // 3. Capture (Immediate capture for this simplified flow)
+                payment.Capture();
+                _logger.LogInformation("Payment {PaymentId} captured. TransactionId: {TransactionId}", id, result.TransactionId);
             }
             else
             {
-                intent.MarkFailed(result.ErrorMessage ?? "Unknown gateway error");
-                _logger.LogWarning("Payment {PaymentId} failed. Reason: {Reason}", id, intent.FailureReason);
+                payment.MarkFailed(result.ErrorMessage ?? "Unknown gateway error");
+                _logger.LogWarning("Payment {PaymentId} failed. Reason: {Reason}", id, payment.FailureReason);
             }
 
-            await _repository.SaveAsync(intent);
-            return intent;
+            await _repository.SaveAsync(payment);
+            return payment;
         }
         catch (Exception ex)
         {

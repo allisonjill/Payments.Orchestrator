@@ -35,7 +35,7 @@ public class PaymentServiceTests
         Assert.NotNull(result);
         Assert.Equal(amount, result.Amount);
         Assert.Equal(currency, result.Currency);
-        Assert.Equal(PaymentStatus.Created, result.Status);
+        Assert.Equal(PaymentStatus.Initiated, result.Status);
         
         _repoMock.Verify(r => r.SaveAsync(It.IsAny<Payment>()), Times.Once);
     }
@@ -55,10 +55,11 @@ public class PaymentServiceTests
 
         // Assert
         Assert.NotNull(result);
-        Assert.Equal(PaymentStatus.Succeeded, result!.Status);
+        Assert.Equal(PaymentStatus.Captured, result!.Status);
         Assert.Equal("txn_123", result.GatewayTransactionId);
         
-        _repoMock.Verify(r => r.SaveAsync(intent), Times.AtLeastOnce);
+        // Should save at least 3 times (Validate, Authorize, Capture)
+        _repoMock.Verify(r => r.SaveAsync(intent), Times.AtLeast(3));
     }
 
     [Fact]
@@ -88,11 +89,10 @@ public class PaymentServiceTests
         // Arrange
         var intent = new Payment(100m, "USD");
         
-        // Reflection to force state for test setup if setter is private, 
-        // or just use methods if public. Assuming I can get it to Succeeded via internal/methods or helper.
-        // Actually PaymentIntent has public methods to transition.
-        intent.MarkProcessing();
-        intent.MarkSucceeded("txn_existing");
+        // Transition to Captured manually for setup
+        intent.Validate();
+        intent.Authorize("txn_existing");
+        intent.Capture();
 
         _repoMock.Setup(r => r.GetAsync(intent.Id)).ReturnsAsync(intent);
 
@@ -101,7 +101,7 @@ public class PaymentServiceTests
 
         // Assert
         Assert.NotNull(result);
-        Assert.Equal(PaymentStatus.Succeeded, result!.Status);
+        Assert.Equal(PaymentStatus.Captured, result!.Status);
         Assert.Equal("txn_existing", result.GatewayTransactionId);
 
         _gatewayMock.Verify(g => g.ChargeAsync(It.IsAny<decimal>(), It.IsAny<string>(), It.IsAny<Guid>()), Times.Never);
