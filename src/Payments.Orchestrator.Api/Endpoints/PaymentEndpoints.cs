@@ -29,10 +29,10 @@ public static class PaymentEndpoints
             return Results.ValidationProblem(validationResult.ToDictionary());
         }
 
-        var intent = await service.CreatePaymentAsync(request.Amount, request.Currency);
-        var response = PaymentResponse.FromDomain(intent);
+        var payment = await service.CreatePaymentAsync(request.Amount, request.Currency);
+        var response = PaymentResponse.FromDomain(payment);
 
-        return Results.Created($"/api/v1/payments/{intent.Id}", response);
+        return Results.Created($"/api/v1/payments/{payment.Id}", response);
     }
 
     static async Task<IResult> ConfirmPayment(
@@ -41,16 +41,16 @@ public static class PaymentEndpoints
     {
         try
         {
-            var intent = await service.ConfirmPaymentAsync(id);
-            if (intent == null) return Results.NotFound();
+            var payment = await service.ConfirmPaymentAsync(id);
+            if (payment == null) return Results.NotFound();
 
             // 402 if failed, 200 if succeeded/processing
-            if (intent.Status == Domain.PaymentStatus.Failed)
+            if (payment.Status == Domain.PaymentStatus.Failed)
             {
-                return Results.Json(PaymentResponse.FromDomain(intent), statusCode: 402);
+                return Results.Json(PaymentResponse.FromDomain(payment), statusCode: 402);
             }
 
-            return Results.Ok(PaymentResponse.FromDomain(intent));
+            return Results.Ok(PaymentResponse.FromDomain(payment));
         }
         catch (InvalidOperationException ex)
         {
@@ -62,7 +62,7 @@ public static class PaymentEndpoints
         [FromRoute] Guid id,
         [FromServices] PaymentService service)
     {
-        var intent = await service.GetPaymentAsync(id);
-        return intent is null ? Results.NotFound() : Results.Ok(PaymentResponse.FromDomain(intent));
+        var payment = await service.GetPaymentAsync(id);
+        return payment is null ? Results.NotFound() : Results.Ok(PaymentResponse.FromDomain(payment));
     }
 }

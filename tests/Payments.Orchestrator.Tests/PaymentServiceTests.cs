@@ -37,14 +37,14 @@ public class PaymentServiceTests
         Assert.Equal(currency, result.Currency);
         Assert.Equal(PaymentStatus.Created, result.Status);
         
-        _repoMock.Verify(r => r.SaveAsync(It.IsAny<PaymentIntent>()), Times.Once);
+        _repoMock.Verify(r => r.SaveAsync(It.IsAny<Payment>()), Times.Once);
     }
 
     [Fact]
     public async Task ConfirmPayment_WhenSucceeded_ShouldReturnSuccess()
     {
         // Arrange
-        var intent = new PaymentIntent(100m, "USD");
+        var intent = new Payment(100m, "USD");
         _repoMock.Setup(r => r.GetAsync(intent.Id)).ReturnsAsync(intent);
         
         _gatewayMock.Setup(g => g.ChargeAsync(100m, "USD", intent.Id))
@@ -65,7 +65,7 @@ public class PaymentServiceTests
     public async Task ConfirmPayment_WhenGatewayFails_ShouldMarkFailed()
     {
         // Arrange
-        var intent = new PaymentIntent(100m, "USD");
+        var intent = new Payment(100m, "USD");
         _repoMock.Setup(r => r.GetAsync(intent.Id)).ReturnsAsync(intent);
         
         _gatewayMock.Setup(g => g.ChargeAsync(100m, "USD", intent.Id))
@@ -86,7 +86,7 @@ public class PaymentServiceTests
     public async Task ConfirmPayment_WhenAlreadySucceeded_ShouldBeIdempotent()
     {
         // Arrange
-        var intent = new PaymentIntent(100m, "USD");
+        var intent = new Payment(100m, "USD");
         
         // Reflection to force state for test setup if setter is private, 
         // or just use methods if public. Assuming I can get it to Succeeded via internal/methods or helper.

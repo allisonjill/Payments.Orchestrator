@@ -15,7 +15,7 @@ public record PaymentResponse(
     DateTime? ProcessedAt
 )
 {
-    public static PaymentResponse FromDomain(PaymentIntent intent) => new(
+    public static PaymentResponse FromDomain(Payment intent) => new(
         intent.Id,
         intent.Amount,
         intent.Currency,

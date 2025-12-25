@@ -19,20 +19,20 @@ public class PaymentService
         _logger = logger;
     }
 
-    public async Task<PaymentIntent> CreatePaymentAsync(decimal amount, string currency)
+    public async Task<Payment> CreatePaymentAsync(decimal amount, string currency)
     {
-        var intent = new PaymentIntent(amount, currency);
+        var intent = new Payment(amount, currency);
         await _repository.SaveAsync(intent);
         _logger.LogInformation("Created payment intent {PaymentId} for {Amount} {Currency}", intent.Id, amount, currency);
         return intent;
     }
 
-    public async Task<PaymentIntent?> GetPaymentAsync(Guid id)
+    public async Task<Payment?> GetPaymentAsync(Guid id)
     {
         return await _repository.GetAsync(id);
     }
 
-    public async Task<PaymentIntent?> ConfirmPaymentAsync(Guid id)
+    public async Task<Payment?> ConfirmPaymentAsync(Guid id)
     {
         var intent = await _repository.GetAsync(id);
         if (intent == null) return null;

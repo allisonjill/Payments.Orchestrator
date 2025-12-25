@@ -1,6 +1,6 @@
 namespace Payments.Orchestrator.Api.Domain;
 
-public class PaymentIntent
+public class Payment
 {
     public Guid Id { get; init; } = Guid.NewGuid();
     public decimal Amount { get; init; }
@@ -12,7 +12,7 @@ public class PaymentIntent
     public DateTime? ProcessedAt { get; private set; }
 
     // Constructor for creating new intents
-    public PaymentIntent(decimal amount, string currency)
+    public Payment(decimal amount, string currency)
     {
         if (amount <= 0) throw new ArgumentException("Amount must be positive", nameof(amount));
         if (!Domain.Currency.IsSupported(currency)) throw new ArgumentException($"Currency '{currency}' is not supported", nameof(currency));
