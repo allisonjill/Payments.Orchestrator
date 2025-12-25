@@ -14,6 +14,8 @@ builder.Services.AddOpenApi();
 builder.Services.AddHealthChecks();
 
 // Domain Services
+// To use SQL/Dapper, uncomment the following line and configure appsettings.json
+// builder.Services.AddScoped<IPaymentRepository, DapperPaymentRepository>();
 builder.Services.AddSingleton<IPaymentRepository, InMemoryPaymentRepository>();
 builder.Services.AddSingleton<IPaymentGateway, MockPaymentGateway>();
 builder.Services.AddScoped<PaymentService>();
