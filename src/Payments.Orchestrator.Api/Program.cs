@@ -1,7 +1,7 @@
 using FluentValidation;
+using MediatR;
 using Payments.Orchestrator.Api.Application.Interfaces;
 using Payments.Orchestrator.Api.Application.Models;
-using Payments.Orchestrator.Api.Application.Services;
 using Payments.Orchestrator.Api.Application.Validators;
 using Payments.Orchestrator.Api.Api.Endpoints;
 using Payments.Orchestrator.Api.Api.Middleware;
@@ -18,7 +18,7 @@ builder.Services.AddHealthChecks();
 
 // Application Services
 builder.Services.AddValidatorsFromAssemblyContaining<CreatePaymentRequestValidator>();
-builder.Services.AddScoped<PaymentService>();
+builder.Services.AddMediatR(cfg => cfg.RegisterServicesFromAssembly(typeof(Program).Assembly));
 
 // Infrastructure
 builder.Services.AddSingleton<IClock, SystemClock>();

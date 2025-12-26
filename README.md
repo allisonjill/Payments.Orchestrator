@@ -5,6 +5,7 @@ A .NET 9 Payments Orchestrator API designed to demonstrate production-ready arch
 ## Features
 
 *   **Clean Architecture**: Strict separation of concerns (Domain, Application, Infrastructure, Api).
+*   **CQRS with MediatR**: Decoupled Command and Query handlers for better testability and SRP.
 *   **Rich Domain Model**: Strong types and state machine (`Initiated` -> `Validated` -> `Authorized` -> `Captured`).
 *   **Idempotency**: Robust handling of duplicate requests via `Idempotency-Key` headers.
 *   **Persistence Options**:
@@ -15,15 +16,18 @@ A .NET 9 Payments Orchestrator API designed to demonstrate production-ready arch
 
 ## Architecture
 
-The solution follows a strict dependency rule: `Domain` <- `Application` <- `Infrastructure` <- `Api`.
+The solution follows a strict dependency rule and uses **CQRS** with **MediatR**:
 
 ```text
 src/
   Payments.Orchestrator.Api/
-    ├── Domain/                     # Enterprise Logic (Entities, Enums) - No External Deps
-    ├── Application/                # Use Cases, Interfaces, Validators
-    ├── Infrastructure/             # Implementations (Dapper, SystemClock, MockGateway)
-    └── Api/                        # Transport (Endpoints, Middleware)
+    ├── Domain/                     # Enterprise Logic (Entities, Enums)
+    ├── Application/
+    │   ├── Features/               # Vertical Slices (Commands/Queries)
+    │   ├── Interfaces/
+    │   └── Validators/
+    ├── Infrastructure/             # Implementations (Dapper, SystemClock)
+    └── Api/                        # Endpoints (Maps to MediatR)
 ```
 
 ## Prerequisites

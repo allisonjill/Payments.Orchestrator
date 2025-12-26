@@ -1,7 +1,10 @@
 using FluentValidation;
+using MediatR;
 using Microsoft.AspNetCore.Mvc;
+using Payments.Orchestrator.Api.Application.Features.Payments.Commands.ConfirmPayment;
+using Payments.Orchestrator.Api.Application.Features.Payments.Commands.ProcessPayment;
+using Payments.Orchestrator.Api.Application.Features.Payments.Queries.GetPayment;
 using Payments.Orchestrator.Api.Application.Models;
-using Payments.Orchestrator.Api.Application.Services;
 using Payments.Orchestrator.Api.Domain.Enums;
 
 namespace Payments.Orchestrator.Api.Api.Endpoints;
@@ -22,7 +25,7 @@ public static class PaymentEndpoints
     static async Task<IResult> CreatePayment(
         [FromBody] CreatePaymentRequest request,
         [FromServices] IValidator<CreatePaymentRequest> validator,
-        [FromServices] PaymentService service)
+        [FromServices] ISender sender)
     {
         var validationResult = await validator.ValidateAsync(request);
         if (!validationResult.IsValid)
@@ -30,7 +33,8 @@ public static class PaymentEndpoints
             return Results.ValidationProblem(validationResult.ToDictionary());
         }
 
-        var payment = await service.ProcessPaymentRequestAsync(request.Amount, request.Currency);
+        var command = new ProcessPaymentCommand(request.Amount, request.Currency);
+        var payment = await sender.Send(command);
         var response = PaymentResponse.FromDomain(payment);
 
         if (payment.Status == PaymentStatus.Failed)
@@ -43,11 +47,11 @@ public static class PaymentEndpoints
 
     static async Task<IResult> ConfirmPayment(
         [FromRoute] Guid id,
-        [FromServices] PaymentService service)
+        [FromServices] ISender sender)
     {
         try
         {
-            var payment = await service.ConfirmPaymentAsync(id);
+            var payment = await sender.Send(new ConfirmPaymentCommand(id));
             if (payment == null) return Results.NotFound();
 
             // 402 if failed, 200 if succeeded/processing
@@ -66,9 +70,9 @@ public static class PaymentEndpoints
 
     static async Task<IResult> GetPayment(
         [FromRoute] Guid id,
-        [FromServices] PaymentService service)
+        [FromServices] ISender sender)
     {
-        var payment = await service.GetPaymentAsync(id);
+        var payment = await sender.Send(new GetPaymentQuery(id));
         return payment is null ? Results.NotFound() : Results.Ok(PaymentResponse.FromDomain(payment));
     }
 }
