@@ -485,3 +485,4 @@ $RECYCLE.BIN/
 # Build output logs
 build_*.txt
 *.log
+test*.txt

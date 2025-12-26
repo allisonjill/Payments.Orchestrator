@@ -1,4 +1,0 @@
-  Determining projects to restore...
-  All projects are up-to-date for restore.
-  Payments.Orchestrator.Api -> C:\Repos\Payments.Orchestrator\src\Payments.Orchestrator.Api\bin\Debug\net9.0\Payments.Orchestrator.Api.dll
-C:\Repos\Payments.Orchestrator\tests\Payments.Orchestrator.Tests\PaymentServiceTests.cs(65,5): error CS1519: Invalid token '}' in a member declaration [C:\Repos\Payments.Orchestrator\tests\Payments.Orchestrator.Tests\Payments.Orchestrator.Tests.csproj]
