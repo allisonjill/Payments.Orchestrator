@@ -3,7 +3,7 @@ using Payments.Orchestrator.Api.Domain.Enums;
 
 namespace Payments.Orchestrator.Api.Application.Models;
 
-public record CreatePaymentRequest(decimal Amount, string Currency);
+public record CreatePaymentRequest(Guid MerchantId, Guid CustomerId, decimal Amount, string Currency);
 
 public record PaymentResponse(
     Guid Id,

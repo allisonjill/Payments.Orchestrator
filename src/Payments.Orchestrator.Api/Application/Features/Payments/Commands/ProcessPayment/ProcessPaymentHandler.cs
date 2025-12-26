@@ -21,9 +21,9 @@ public class ProcessPaymentHandler : IRequestHandler<ProcessPaymentCommand, Paym
     public async Task<Payment> Handle(ProcessPaymentCommand request, CancellationToken cancellationToken)
     {
         // 1. Create & Persist "Initiated" (Received)
-        var payment = new Payment(request.Amount, request.Currency);
+        var payment = new Payment(request.MerchantId, request.CustomerId, request.Amount, request.Currency);
         await _repository.SaveAsync(payment);
-        _logger.LogInformation("Payment {PaymentId} Initiated for {Amount} {Currency}", payment.Id, request.Amount, request.Currency);
+        _logger.LogInformation("Payment {PaymentId} Initiated for {Amount} {Currency} (Merchant: {MerchantId})", payment.Id, request.Amount, request.Currency, request.MerchantId);
 
         try
         {

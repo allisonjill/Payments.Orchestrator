@@ -6,6 +6,8 @@ using Payments.Orchestrator.Api.Domain.ValueObjects;
 public class Payment
 {
     public Guid Id { get; init; } = Guid.NewGuid();
+    public Guid MerchantId { get; init; }
+    public Guid CustomerId { get; init; }
     public decimal Amount { get; init; }
     public string Currency { get; init; } = string.Empty;
     public PaymentStatus Status { get; private set; } = PaymentStatus.Initiated;
@@ -14,11 +16,15 @@ public class Payment
     public DateTime CreatedAt { get; init; } = DateTime.UtcNow;
     public DateTime? ProcessedAt { get; private set; }
 
-    public Payment(decimal amount, string currency)
+    public Payment(Guid merchantId, Guid customerId, decimal amount, string currency)
     {
+        if (merchantId == Guid.Empty) throw new ArgumentException("MerchantId is required", nameof(merchantId));
+        if (customerId == Guid.Empty) throw new ArgumentException("CustomerId is required", nameof(customerId));
         if (amount <= 0) throw new ArgumentException("Amount must be positive", nameof(amount));
         if (!Domain.ValueObjects.Currency.IsSupported(currency)) throw new ArgumentException($"Currency '{currency}' is not supported", nameof(currency));
 
+        MerchantId = merchantId;
+        CustomerId = customerId;
         Amount = amount;
         Currency = currency.ToUpper();
     }

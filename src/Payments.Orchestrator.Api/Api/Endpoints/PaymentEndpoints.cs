@@ -33,7 +33,7 @@ public static class PaymentEndpoints
             return Results.ValidationProblem(validationResult.ToDictionary());
         }
 
-        var command = new ProcessPaymentCommand(request.Amount, request.Currency);
+        var command = new ProcessPaymentCommand(request.MerchantId, request.CustomerId, request.Amount, request.Currency);
         var payment = await sender.Send(command);
         var response = PaymentResponse.FromDomain(payment);
 

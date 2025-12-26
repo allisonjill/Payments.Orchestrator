@@ -26,7 +26,7 @@ public class ConfirmPaymentHandlerTests
     public async Task Handle_WhenSucceeded_ShouldReturnSuccess()
     {
         // Arrange
-        var intent = new Payment(100m, "USD");
+        var intent = new Payment(Guid.NewGuid(), Guid.NewGuid(), 100m, "USD");
         _repoMock.Setup(r => r.GetAsync(intent.Id)).ReturnsAsync(intent);
         
         _gatewayMock.Setup(g => g.ChargeAsync(100m, "USD", intent.Id))
@@ -47,7 +47,7 @@ public class ConfirmPaymentHandlerTests
     public async Task Handle_WhenGatewayFails_ShouldMarkFailed()
     {
         // Arrange
-        var intent = new Payment(100m, "USD");
+        var intent = new Payment(Guid.NewGuid(), Guid.NewGuid(), 100m, "USD");
         _repoMock.Setup(r => r.GetAsync(intent.Id)).ReturnsAsync(intent);
         
         _gatewayMock.Setup(g => g.ChargeAsync(100m, "USD", intent.Id))
@@ -68,7 +68,7 @@ public class ConfirmPaymentHandlerTests
     public async Task Handle_WhenAlreadySucceeded_ShouldBeIdempotent()
     {
         // Arrange
-        var intent = new Payment(100m, "USD");
+        var intent = new Payment(Guid.NewGuid(), Guid.NewGuid(), 100m, "USD");
         // Transition to Captured manually
         intent.Validate();
         intent.Authorize("txn_existing");

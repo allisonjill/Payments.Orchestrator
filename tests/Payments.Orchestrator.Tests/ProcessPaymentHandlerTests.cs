@@ -26,7 +26,9 @@ public class ProcessPaymentHandlerTests
     public async Task Handle_ShouldCreateChargeAndCapture()
     {
         // Arrange
-        var command = new ProcessPaymentCommand(100m, "USD");
+        var merchantId = Guid.NewGuid();
+        var customerId = Guid.NewGuid();
+        var command = new ProcessPaymentCommand(merchantId, customerId, 100m, "USD");
         _gatewayMock.Setup(g => g.ChargeAsync(100m, "USD", It.IsAny<Guid>()))
             .ReturnsAsync(new GatewayResult(true, "txn_123", null));
 
@@ -35,6 +37,8 @@ public class ProcessPaymentHandlerTests
 
         // Assert
         Assert.NotNull(result);
+        Assert.Equal(merchantId, result.MerchantId);
+        Assert.Equal(customerId, result.CustomerId);
         Assert.Equal(100m, result.Amount);
         Assert.Equal("USD", result.Currency);
         Assert.Equal(PaymentStatus.Captured, result.Status);
@@ -46,7 +50,9 @@ public class ProcessPaymentHandlerTests
     public async Task Handle_WhenGatewayDeclines_ShouldMarkFailed()
     {
         // Arrange
-        var command = new ProcessPaymentCommand(100m, "EUR");
+        var merchantId = Guid.NewGuid();
+        var customerId = Guid.NewGuid();
+        var command = new ProcessPaymentCommand(merchantId, customerId, 100m, "EUR");
         _gatewayMock.Setup(g => g.ChargeAsync(100m, "EUR", It.IsAny<Guid>()))
             .ReturnsAsync(new GatewayResult(false, null, "Insufficient Funds"));
 

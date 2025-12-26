@@ -9,7 +9,7 @@ public class IdempotencyMiddleware
     private readonly RequestDelegate _next;
     private readonly ILogger<IdempotencyMiddleware> _logger;
     // Key: IdempotencyKey, Value: (StatusCode, BodyJson)
-    // Note: In a real system, this would be Redis with TTL
+    // Note: In a PROD system, this would be Redis with TTL
     private static readonly ConcurrentDictionary<string, (int StatusCode, string Body)> _cache = new();
 
     public IdempotencyMiddleware(RequestDelegate next, ILogger<IdempotencyMiddleware> logger)
