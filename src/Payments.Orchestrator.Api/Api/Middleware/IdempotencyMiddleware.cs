@@ -1,8 +1,8 @@
 using System.Collections.Concurrent;
 using System.Text.Json;
-using Payments.Orchestrator.Api.Models;
+using Payments.Orchestrator.Api.Application.Models;
 
-namespace Payments.Orchestrator.Api.Middleware;
+namespace Payments.Orchestrator.Api.Api.Middleware;
 
 public class IdempotencyMiddleware
 {

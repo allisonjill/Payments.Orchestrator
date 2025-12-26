@@ -1,8 +1,9 @@
 using Moq;
 using Microsoft.Extensions.Logging;
-using Payments.Orchestrator.Api.Domain;
-using Payments.Orchestrator.Api.Interfaces;
-using Payments.Orchestrator.Api.Services;
+using Payments.Orchestrator.Api.Domain.Entities;
+using Payments.Orchestrator.Api.Domain.Enums;
+using Payments.Orchestrator.Api.Application.Interfaces;
+using Payments.Orchestrator.Api.Application.Services;
 
 namespace Payments.Orchestrator.Tests;
 

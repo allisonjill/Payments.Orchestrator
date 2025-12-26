@@ -1,6 +1,6 @@
-using Payments.Orchestrator.Api.Interfaces;
+using Payments.Orchestrator.Api.Application.Interfaces;
 
-namespace Payments.Orchestrator.Api.Infrastructure;
+namespace Payments.Orchestrator.Api.Infrastructure.Gateways;
 
 public class MockPaymentGateway : IPaymentGateway
 {

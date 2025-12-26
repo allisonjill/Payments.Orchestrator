@@ -1,8 +1,8 @@
 using FluentValidation;
-using Payments.Orchestrator.Api.Domain;
-using Payments.Orchestrator.Api.Models;
+using Payments.Orchestrator.Api.Domain.ValueObjects;
+using Payments.Orchestrator.Api.Application.Models;
 
-namespace Payments.Orchestrator.Api.Validators;
+namespace Payments.Orchestrator.Api.Application.Validators;
 
 public class CreatePaymentRequestValidator : AbstractValidator<CreatePaymentRequest>
 {

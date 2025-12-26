@@ -1,4 +1,4 @@
-namespace Payments.Orchestrator.Api.Domain;
+namespace Payments.Orchestrator.Api.Domain.ValueObjects;
 
 public static class Currency
 {

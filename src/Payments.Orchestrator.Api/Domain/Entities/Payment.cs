@@ -1,4 +1,7 @@
-namespace Payments.Orchestrator.Api.Domain;
+namespace Payments.Orchestrator.Api.Domain.Entities;
+
+using Payments.Orchestrator.Api.Domain.Enums;
+using Payments.Orchestrator.Api.Domain.ValueObjects;
 
 public class Payment
 {
@@ -11,11 +14,10 @@ public class Payment
     public DateTime CreatedAt { get; init; } = DateTime.UtcNow;
     public DateTime? ProcessedAt { get; private set; }
 
-    // Constructor for creating new payments
     public Payment(decimal amount, string currency)
     {
         if (amount <= 0) throw new ArgumentException("Amount must be positive", nameof(amount));
-        if (!Domain.Currency.IsSupported(currency)) throw new ArgumentException($"Currency '{currency}' is not supported", nameof(currency));
+        if (!Domain.ValueObjects.Currency.IsSupported(currency)) throw new ArgumentException($"Currency '{currency}' is not supported", nameof(currency));
 
         Amount = amount;
         Currency = currency.ToUpper();

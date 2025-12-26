@@ -1,6 +1,6 @@
-using Payments.Orchestrator.Api.Domain;
+using Payments.Orchestrator.Api.Domain.Entities;
 
-namespace Payments.Orchestrator.Api.Interfaces;
+namespace Payments.Orchestrator.Api.Application.Interfaces;
 
 public interface IPaymentRepository
 {

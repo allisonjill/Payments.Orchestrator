@@ -1,25 +1,31 @@
 using FluentValidation;
-using Payments.Orchestrator.Api.Endpoints;
-using Payments.Orchestrator.Api.Infrastructure;
-using Payments.Orchestrator.Api.Interfaces;
-using Payments.Orchestrator.Api.Models;
-using Payments.Orchestrator.Api.Services;
-using Payments.Orchestrator.Api.Validators;
+using Payments.Orchestrator.Api.Application.Interfaces;
+using Payments.Orchestrator.Api.Application.Models;
+using Payments.Orchestrator.Api.Application.Services;
+using Payments.Orchestrator.Api.Application.Validators;
+using Payments.Orchestrator.Api.Api.Endpoints;
+using Payments.Orchestrator.Api.Api.Middleware;
+using Payments.Orchestrator.Api.Infrastructure.Gateways;
+using Payments.Orchestrator.Api.Infrastructure.Persistence;
+using Payments.Orchestrator.Api.Infrastructure.Services;
 
 var builder = WebApplication.CreateBuilder(args);
 
 // Add services to the container.
-// Learn more about configuring OpenAPI at https://aka.ms/aspnet/openapi
+builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddOpenApi();
 builder.Services.AddHealthChecks();
 
-// Domain Services
-// To use SQL/Dapper, uncomment the following line and configure appsettings.json
+// Application Services
+builder.Services.AddValidatorsFromAssemblyContaining<CreatePaymentRequestValidator>();
+builder.Services.AddScoped<PaymentService>();
+
+// Infrastructure
+builder.Services.AddSingleton<IClock, SystemClock>();
+builder.Services.AddSingleton<IPaymentGateway, MockPaymentGateway>();
 // builder.Services.AddScoped<IPaymentRepository, DapperPaymentRepository>();
 builder.Services.AddSingleton<IPaymentRepository, InMemoryPaymentRepository>();
-builder.Services.AddSingleton<IPaymentGateway, MockPaymentGateway>();
-builder.Services.AddScoped<PaymentService>();
-builder.Services.AddScoped<IValidator<CreatePaymentRequest>, CreatePaymentRequestValidator>();
+
 
 var app = builder.Build();
 
@@ -29,13 +35,12 @@ if (app.Environment.IsDevelopment())
     app.MapOpenApi();
 }
 
-app.UseHttpsRedirection();
+app.UseMiddleware<IdempotencyMiddleware>();
 
-app.UseMiddleware<Payments.Orchestrator.Api.Middleware.IdempotencyMiddleware>();
+app.UseHttpsRedirection();
 
 app.MapHealthChecks("/health");
 
-// Map Endpoints
 app.MapPaymentEndpoints();
 
 app.Run();

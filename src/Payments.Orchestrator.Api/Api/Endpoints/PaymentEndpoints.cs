@@ -1,9 +1,10 @@
 using FluentValidation;
 using Microsoft.AspNetCore.Mvc;
-using Payments.Orchestrator.Api.Models;
-using Payments.Orchestrator.Api.Services;
+using Payments.Orchestrator.Api.Application.Models;
+using Payments.Orchestrator.Api.Application.Services;
+using Payments.Orchestrator.Api.Domain.Enums;
 
-namespace Payments.Orchestrator.Api.Endpoints;
+namespace Payments.Orchestrator.Api.Api.Endpoints;
 
 public static class PaymentEndpoints
 {
@@ -45,7 +46,7 @@ public static class PaymentEndpoints
             if (payment == null) return Results.NotFound();
 
             // 402 if failed, 200 if succeeded/processing
-            if (payment.Status == Domain.PaymentStatus.Failed)
+            if (payment.Status == PaymentStatus.Failed)
             {
                 return Results.Json(PaymentResponse.FromDomain(payment), statusCode: 402);
             }

@@ -1,7 +1,9 @@
-using Payments.Orchestrator.Api.Domain;
-using Payments.Orchestrator.Api.Interfaces;
+using Microsoft.Extensions.Logging;
+using Payments.Orchestrator.Api.Domain.Entities;
+using Payments.Orchestrator.Api.Domain.Enums;
+using Payments.Orchestrator.Api.Application.Interfaces;
 
-namespace Payments.Orchestrator.Api.Services;
+namespace Payments.Orchestrator.Api.Application.Services;
 
 public class PaymentService
 {

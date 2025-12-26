@@ -1,4 +1,4 @@
-namespace Payments.Orchestrator.Api.Interfaces;
+namespace Payments.Orchestrator.Api.Application.Interfaces;
 
 public record GatewayResult(bool Success, string? TransactionId, string? ErrorMessage);
 

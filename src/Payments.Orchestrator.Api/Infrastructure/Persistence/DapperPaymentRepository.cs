@@ -1,10 +1,10 @@
 using System.Data;
 using Dapper;
 using Microsoft.Data.SqlClient;
-using Payments.Orchestrator.Api.Domain;
-using Payments.Orchestrator.Api.Interfaces;
+using Payments.Orchestrator.Api.Domain.Entities;
+using Payments.Orchestrator.Api.Application.Interfaces;
 
-namespace Payments.Orchestrator.Api.Infrastructure;
+namespace Payments.Orchestrator.Api.Infrastructure.Persistence;
 
 public class DapperPaymentRepository : IPaymentRepository
 {

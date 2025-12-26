@@ -1,6 +1,7 @@
-using Payments.Orchestrator.Api.Domain;
+using Payments.Orchestrator.Api.Domain.Entities;
+using Payments.Orchestrator.Api.Domain.Enums;
 
-namespace Payments.Orchestrator.Api.Models;
+namespace Payments.Orchestrator.Api.Application.Models;
 
 public record CreatePaymentRequest(decimal Amount, string Currency);
 
