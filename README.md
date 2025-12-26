@@ -56,7 +56,16 @@ dotnet test
 
 #### 1. Create a Payment
 ```powershell
-$response = Invoke-RestMethod -Uri "http://localhost:5200/api/v1/payments" -Method Post -ContentType "application/json" -Body '{"amount": 100.00, "currency": "USD"}'
+$merchantId = [Guid]::NewGuid()
+$customerId = [Guid]::NewGuid()
+$body =  @{ 
+    merchantId = $merchantId
+    customerId = $customerId
+    amount = 100.00
+    currency = "USD" 
+} | ConvertTo-Json
+
+$response = Invoke-RestMethod -Uri "http://localhost:5200/api/v1/payments" -Method Post -ContentType "application/json" -Body $body
 Write-Output "Payment Created. ID: $($response.id) Status: $($response.status)"
 ```
 
@@ -70,7 +79,6 @@ Invoke-RestMethod -Uri "http://localhost:5200/api/v1/payments/$($response.id)/co
 Sending the same `Idempotency-Key` header with identical operations returns the cached 2xx response.
 ```powershell
 $key = "test-key-$(Get-Random)"
-$body = '{"amount": 50.00, "currency": "USD"}'
 # First Request
 Invoke-RestMethod -Uri "http://localhost:5200/api/v1/payments" -Method Post -ContentType "application/json" -Body $body -Headers @{"Idempotency-Key"=$key}
 # Second Request (Returns cached result)
