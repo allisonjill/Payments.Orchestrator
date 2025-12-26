@@ -1,18 +1,35 @@
 # Payments.Orchestrator
 
-A .NET 9 Payments Orchestrator API designed to demonstrate:
-*   **Idempotency** (Middleware-based)
-*   **Clean Architecture** (Domain, Services, Infrastructure layers)
-*   **Validation** (FluentValidation)
-*   **Minimal API**
+A .NET 9 Payments Orchestrator API designed to demonstrate production-ready architectural patterns, adhering to **Clean Architecture** principles.
 
-## Project Structure
-- `src/Payments.Orchestrator.Api`: The Web API project.
-- `tests/Payments.Orchestrator.Tests`: Unit and integration tests using xUnit and Moq.
+## Features
+
+*   **Clean Architecture**: Strict separation of concerns (Domain, Application, Infrastructure, Api).
+*   **Rich Domain Model**: Strong types and state machine (`Initiated` -> `Validated` -> `Authorized` -> `Captured`).
+*   **Idempotency**: Robust handling of duplicate requests via `Idempotency-Key` headers.
+*   **Persistence Options**:
+    *   **In-Memory**: Thread-safe `ConcurrentDictionary` for rapid prototyping (default).
+    *   **Dapper**: Low-level, high-performance SQL implementation (code-ready, just enable in `Program.cs`).
+*   **Validation**: FluentValidation for request integrity.
+*   **Test-Driven**: Comprehensive Unit and Integration tests.
+
+## Architecture
+
+The solution follows a strict dependency rule: `Domain` <- `Application` <- `Infrastructure` <- `Api`.
+
+```text
+src/
+  Payments.Orchestrator.Api/
+    ├── Domain/                     # Enterprise Logic (Entities, Enums) - No External Deps
+    ├── Application/                # Use Cases, Interfaces, Validators
+    ├── Infrastructure/             # Implementations (Dapper, SystemClock, MockGateway)
+    └── Api/                        # Transport (Endpoints, Middleware)
+```
 
 ## Prerequisites
 - .NET 9 SDK
-- PowerShell (for running the demo commands)
+- PowerShell (for running typical workflows)
+- (Optional) SQL Server instance if switching to `DapperPaymentRepository`
 
 ## How to Run
 
@@ -24,52 +41,34 @@ dotnet run --project src/Payments.Orchestrator.Api/Payments.Orchestrator.Api.csp
 ```
 
 The API will be available at `http://localhost:5200`.
+Health Check: `http://localhost:5200/health`
 
-### Health Checks
-- `GET /health` -> 200 OK
-
-## How to Test
-
-### Automated Tests
-Run the unit tests from the root directory:
-
+### Run Tests
 ```powershell
 dotnet test
 ```
 
-### Manual API Testing (PowerShell)
-
-You can verify the core flows using the following commands while the API is running.
+## Usage Examples (PowerShell)
 
 #### 1. Create a Payment
 ```powershell
 $response = Invoke-RestMethod -Uri "http://localhost:5200/api/v1/payments" -Method Post -ContentType "application/json" -Body '{"amount": 100.00, "currency": "USD"}'
-Write-Output "Payment Created. ID: $($response.id)"
+Write-Output "Payment Created. ID: $($response.id) Status: $($response.status)"
 ```
 
 #### 2. Confirm a Payment
+Triggers the full lifecycle: `Validate` -> `Authorize` -> `Capture`.
 ```powershell
 Invoke-RestMethod -Uri "http://localhost:5200/api/v1/payments/$($response.id)/confirm" -Method Post
 ```
 
-#### 3. Test Validation (Negative Amount)
-```powershell
-try {
-    Invoke-RestMethod -Uri "http://localhost:5200/api/v1/payments" -Method Post -ContentType "application/json" -Body '{"amount": -50, "currency": "USD"}'
-} catch {
-    Write-Output "Validation Error: $($_.Exception.Message)"
-}
-```
-
-#### 4. Test Idempotency
-Send the same request twice with the same `Idempotency-Key` header. The returned ID should be identical.
-
+#### 3. Idempotency Check
+Sending the same `Idempotency-Key` header with identical operations returns the cached 2xx response.
 ```powershell
 $key = "test-key-$(Get-Random)"
-$body = '{"amount": 10.00, "currency": "USD"}'
-
-$res1 = Invoke-RestMethod -Uri "http://localhost:5200/api/v1/payments" -Method Post -ContentType "application/json" -Body $body -Headers @{"Idempotency-Key"=$key}
-$res2 = Invoke-RestMethod -Uri "http://localhost:5200/api/v1/payments" -Method Post -ContentType "application/json" -Body $body -Headers @{"Idempotency-Key"=$key}
-
-if ($res1.id -eq $res2.id) { Write-Output "✅ Idempotency Works!" } else { Write-Output "❌ Failed" }
+$body = '{"amount": 50.00, "currency": "USD"}'
+# First Request
+Invoke-RestMethod -Uri "http://localhost:5200/api/v1/payments" -Method Post -ContentType "application/json" -Body $body -Headers @{"Idempotency-Key"=$key}
+# Second Request (Returns cached result)
+Invoke-RestMethod -Uri "http://localhost:5200/api/v1/payments" -Method Post -ContentType "application/json" -Body $body -Headers @{"Idempotency-Key"=$key}
 ```
