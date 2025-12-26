@@ -1,0 +1,7 @@
+  Determining projects to restore...
+  All projects are up-to-date for restore.
+  Payments.Orchestrator.Api -> C:\Repos\Payments.Orchestrator\src\Payments.Orchestrator.Api\bin\Debug\net9.0\Payments.Orchestrator.Api.dll
+C:\Repos\Payments.Orchestrator\tests\Payments.Orchestrator.Tests\PaymentServiceTests.cs(45,5): error CS0106: The modifier 'public' is not valid for this item [C:\Repos\Payments.Orchestrator\tests\Payments.Orchestrator.Tests\Payments.Orchestrator.Tests.csproj]
+C:\Repos\Payments.Orchestrator\tests\Payments.Orchestrator.Tests\PaymentServiceTests.cs(84,5): error CS0106: The modifier 'public' is not valid for this item [C:\Repos\Payments.Orchestrator\tests\Payments.Orchestrator.Tests\Payments.Orchestrator.Tests.csproj]
+C:\Repos\Payments.Orchestrator\tests\Payments.Orchestrator.Tests\PaymentServiceTests.cs(105,5): error CS0106: The modifier 'public' is not valid for this item [C:\Repos\Payments.Orchestrator\tests\Payments.Orchestrator.Tests\Payments.Orchestrator.Tests.csproj]
+C:\Repos\Payments.Orchestrator\tests\Payments.Orchestrator.Tests\PaymentServiceTests.cs(127,2): error CS1513: } expected [C:\Repos\Payments.Orchestrator\tests\Payments.Orchestrator.Tests\Payments.Orchestrator.Tests.csproj]

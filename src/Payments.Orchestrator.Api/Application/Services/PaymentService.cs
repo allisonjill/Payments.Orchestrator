@@ -21,12 +21,44 @@ public class PaymentService
         _logger = logger;
     }
 
-    public async Task<Payment> CreatePaymentAsync(decimal amount, string currency)
+    // Orchestrates the full synchronous payment flow: Validate -> Persist -> Gateway -> Update
+    public async Task<Payment> ProcessPaymentRequestAsync(decimal amount, string currency)
     {
-        var intent = new Payment(amount, currency);
-        await _repository.SaveAsync(intent);
-        _logger.LogInformation("Created payment intent {PaymentId} for {Amount} {Currency}", intent.Id, amount, currency);
-        return intent;
+        // 1. Create & Persist "Initiated" (Received)
+        var payment = new Payment(amount, currency);
+        await _repository.SaveAsync(payment);
+        _logger.LogInformation("Payment {PaymentId} Initiated for {Amount} {Currency}", payment.Id, amount, currency);
+
+        try
+        {
+            // 2. Gateway Call
+            _logger.LogInformation("Calling Gateway for {PaymentId}", payment.Id);
+            var result = await _gateway.ChargeAsync(amount, currency, payment.Id);
+
+            // 3. Update State
+            if (result.Success)
+            {
+                payment.Validate();
+                payment.Authorize(result.TransactionId!);
+                payment.Capture();
+                _logger.LogInformation("Payment {PaymentId} Captured. Txn: {TransactionId}", payment.Id, result.TransactionId);
+            }
+            else
+            {
+                payment.MarkFailed(result.ErrorMessage ?? "Gateway declined");
+                _logger.LogWarning("Payment {PaymentId} Failed. Reason: {Reason}", payment.Id, payment.FailureReason);
+            }
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Unexpected error processing payment {PaymentId}", payment.Id);
+            payment.MarkFailed("System Error");
+            // In production, you might want to retry or have a separate error state
+        }
+
+        // 4. Save Final State
+        await _repository.SaveAsync(payment);
+        return payment;
     }
 
     public async Task<Payment?> GetPaymentAsync(Guid id)

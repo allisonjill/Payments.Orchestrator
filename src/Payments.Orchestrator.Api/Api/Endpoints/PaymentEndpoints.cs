@@ -30,10 +30,15 @@ public static class PaymentEndpoints
             return Results.ValidationProblem(validationResult.ToDictionary());
         }
 
-        var payment = await service.CreatePaymentAsync(request.Amount, request.Currency);
+        var payment = await service.ProcessPaymentRequestAsync(request.Amount, request.Currency);
         var response = PaymentResponse.FromDomain(payment);
 
-        return Results.Created($"/api/v1/payments/{payment.Id}", response);
+        if (payment.Status == PaymentStatus.Failed)
+        {
+            return Results.Json(response, statusCode: 402); // Payment Required (Declined)
+        }
+
+        return Results.Ok(response); // 200 OK (Captured)
     }
 
     static async Task<IResult> ConfirmPayment(

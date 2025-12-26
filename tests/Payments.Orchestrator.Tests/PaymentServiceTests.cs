@@ -23,22 +23,44 @@ public class PaymentServiceTests
     }
 
     [Fact]
-    public async Task CreatePayment_ShouldSaveAndReturnIntent()
+    public async Task ProcessPayment_ShouldCreateChargeAndCapture()
     {
         // Arrange
         var amount = 100m;
         var currency = "USD";
+        _gatewayMock.Setup(g => g.ChargeAsync(amount, currency, It.IsAny<Guid>()))
+            .ReturnsAsync(new GatewayResult(true, "txn_123", null));
 
         // Act
-        var result = await _service.CreatePaymentAsync(amount, currency);
+        var result = await _service.ProcessPaymentRequestAsync(amount, currency);
 
         // Assert
         Assert.NotNull(result);
         Assert.Equal(amount, result.Amount);
         Assert.Equal(currency, result.Currency);
-        Assert.Equal(PaymentStatus.Initiated, result.Status);
+        Assert.Equal(PaymentStatus.Captured, result.Status);
         
-        _repoMock.Verify(r => r.SaveAsync(It.IsAny<Payment>()), Times.Once);
+        _repoMock.Verify(r => r.SaveAsync(It.IsAny<Payment>()), Times.AtLeast(2)); // Initial + Final
+    }
+
+    [Fact]
+    public async Task ProcessPayment_WhenGatewayDeclines_ShouldMarkFailed()
+    {
+        // Arrange
+        var amount = 100m;
+        var currency = "EUR";
+        _gatewayMock.Setup(g => g.ChargeAsync(amount, currency, It.IsAny<Guid>()))
+            .ReturnsAsync(new GatewayResult(false, null, "Insufficient Funds"));
+
+        // Act
+        var result = await _service.ProcessPaymentRequestAsync(amount, currency);
+
+        // Assert
+        Assert.NotNull(result);
+        Assert.Equal(PaymentStatus.Failed, result.Status);
+        Assert.Equal("Insufficient Funds", result.FailureReason);
+        
+        _repoMock.Verify(r => r.SaveAsync(It.IsAny<Payment>()), Times.AtLeast(2));
     }
 
     [Fact]
