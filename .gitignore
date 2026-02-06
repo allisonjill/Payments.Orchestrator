@@ -486,3 +486,5 @@ $RECYCLE.BIN/
 build_*.txt
 *.log
 test*.txt
+
+src/Payments.Orchestrator.Api/appsettings.Development.json
