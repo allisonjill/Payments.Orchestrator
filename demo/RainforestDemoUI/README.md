@@ -2,81 +2,97 @@
 
 This is a standalone React application for demonstrating the end-to-end integration between the **Payment Orchestrator Backend** and the **Rainforest Pay Sandbox**.
 
-It allows you to:
-1.  **Configure Payment**: Enter merchant details and amounts.
-2.  **Create Session**: Call the backend to generate a real Rainforest Session Key.
-3.  **Process Payment**: Render the **Actual Rainforest Sandbox Widget** to securely collect card details.
-4.  **Simulate Webhooks**: Complete the payment lifecycle by simulating the backend receiving a success event from Rainforest.
+## 🚀 Getting Started (New Machine Setup)
 
-## Prerequisites
+Because this repository does not check in secrets, you must perform the following setup steps when pulling this code to a new machine.
 
-- **Node.js 18+**
-- **Payments Orchestrator Backend** running primarily at `http://localhost:5000` (or `https://localhost:7111`).
-  - *Must be configured with a valid Rainforest Sandbox API Key.*
-  - *Must allow CORS from `http://localhost:5173` (See `Program.cs`).*
+### 1. Backend Setup (Restore Secrets)
+The backend requires your Rainforest Sandbox API Key to function.
 
-## Setup
+1.  Navigate to `src/Payments.Orchestrator.Api/`.
+2.  Create a new file named `appsettings.Development.json`.
+3.  Paste the following configuration (replace `YOUR_*` with your actual keys from the Rainforest Portal):
+    ```json
+    {
+      "Logging": {
+        "LogLevel": {
+          "Default": "Information",
+          "Microsoft.AspNetCore": "Warning"
+        }
+      },
+      "Rainforest": {
+        "BaseUrl": "https://api.sandbox.rainforestpay.com/v1/",
+        "ApiKey": "YOUR_SBX_API_KEY_HERE",
+        "ApiVersion": "2024-10-16",
+        "DefaultSessionTtlSeconds": 3600
+      }
+    }
+    ```
+4.  Run the backend:
+    ```bash
+    dotnet run --project src/Payments.Orchestrator.Api/Payments.Orchestrator.Api.csproj
+    ```
 
-1.  **Install Dependencies**
+### 2. Frontend Setup
+1.  Navigate to the demo folder: `cd demo/RainforestDemoUI`.
+2.  Install dependencies:
     ```bash
     npm install
     ```
-
-2.  **Configuration**
-    Copy `.env.example` to `.env`. Ensure the URL points to your running backend:
+3.  Create a `.env` file in this folder:
     ```
     VITE_ORCHESTRATOR_BASE_URL=http://localhost:5000
     ```
-
-## Running the Demo
-
-1.  Start the development server:
+4.  Start the UI:
     ```bash
     npm run dev
     ```
-2.  Open **[http://localhost:5173](http://localhost:5173)** in your browser.
 
-## Step-by-Step Usage Guide
+---
+
+## 📖 Usage Guide
 
 ### 1. The Payin Flow
-1.  Go to the **"Payin Demo"** tab.
-2.  The form prefills with a valid Sandbox Merchant ID (e.g., `sbx_mid_...`).
-3.  Click **"Create Session"**.
-4.  Wait for the **"Rainforest Payment Component"** card to load.
-    - *It will dynamically fetch the Rainforest SDK from `static.rainforestpay.com`.*
-    - *It will render a secure credit card iframe.*
+1.  Open [http://localhost:5173](http://localhost:5173).
+2.  Go to the **"Payin Demo"** tab.
+3.  **Merchant ID**: You must provide a valid Sandbox Merchant ID.
+    -   *Example*: `sbx_mid_2vYF6MAxOrjH2m8snaatVa3x2xZ`
+4.  Click **"Create Session"**.
+5.  The **Rainforest Payment Component** will load securely.
 
-### 2. Processing a Payment
-Use one of the following Test Cards in the form:
+### 2. Test Cards (Sandbox)
+Use these cards to test different outcomes:
 
-| Card Brand | Test Number | Exp | CVC | Result |
+| Brand | Test Number | Exp | CVC | Result |
 | :--- | :--- | :--- | :--- | :--- |
 | **Visa** | `4242 4242 4242 4242` | Any Future | Any 3-digit | **Approved** |
 | **Mastercard** | `5555 5555 5555 4444` | Any Future | Any 3-digit | **Approved** |
-| **Generates Error** | `4000 0000 0000 0099` | Any Future | Any 3-digit | **Declined** |
+| **Decline** | `4000 0000 0000 0099` | Any Future | Any 3-digit | **Declined** |
 
-Click the **"Pay"** button inside the widget. You should see a browser alert validating the result (e.g., "Payment Approved!").
-
-### 3. The Webhook Loop (The "Status Update")
-Since your localhost is not accessible by the public internet, Rainforest cannot send the *real* `payin.succeeded` webhook to your backend. We simulate this final step:
-
-1.  Look at the **Payment Status** badge at the top of the page (likely "Pending").
-2.  Switch to the **"Webhook Simulator"** tab.
-3.  Select Event Type: **`payin.succeeded`**.
+### 3. Webhook Simulation
+Since `localhost` is not public, Rainforest cannot send real webhooks to your dev machine by default.
+1.  Complete a payment (Status remains "Pending" in UI).
+2.  Go to **"Webhook Simulator"**.
+3.  Select **`payin.succeeded`**.
 4.  Click **"Send Webhook"**.
-5.  Watch the top badge flip to **"Succeeded"**.
+5.  Observe the status badge update to **"Succeeded"**.
 
-This confirms your backend correctly processed the event and pushed the update to the UI.
+---
 
-## Troubleshooting
+## 🪝 Real Webhooks with Hookdeck
+To receive **live** webhooks from Rainforest during development:
 
-### "Rainforest Payment Component - Missing required configuration"
-ensure your backend is returning both a `sessionKey` AND a `payinConfigId`. The component requires both attributes to initialize.
-
-### "Network Error" or "Failed to create session"
-- Verify your backend API is running.
-- Check the backend console for CORS errors.
-- Ensure the `merchantId` in the form exists in your backend's `merchants.json` or database.
-
-### "Payment Error" Alert
-If the widget shows an error alert when clicking Pay, check the browser console (`F12`). It often means the session has expired (sessions last ~1 hour) or the test card data triggered a specific decline rule.
+1.  **Install Hookdeck CLI**:
+    ```bash
+    npm install hookdeck-cli -g
+    ```
+2.  **Start Forwarding**:
+    ```bash
+    hookdeck listen 5000 POST --path /api/webhooks/rainforest
+    ```
+    *This creates a public URL that forwards to your localhost.*
+3.  **Configure Rainforest**:
+    -   Copy the **Webhook URL** from the Hookdeck CLI output.
+    -   Log in to **Rainforest Sandbox Portal > Settings > Webhooks**.
+    -   Add a new endpoint with that URL.
+4.  **Test**: Now, completing a real payment will automatically update the status in your UI!
