@@ -31,3 +31,17 @@ export async function sendWebhook(data: WebhookRequest): Promise<{ status: numbe
         timestamp: new Date().toISOString(),
     };
 }
+
+export async function getRecentWebhooks(): Promise<any[]> {
+    try {
+        const response = await fetch(`${BASE_URL}/api/webhooks/rainforest/events`);
+        console.log('[DEBUG] Polling status:', response.status);
+        if (!response.ok) return [];
+        const json = await response.json();
+        console.log('[DEBUG] Polling result:', json);
+        return json;
+    } catch (e) {
+        console.error('Failed to fetch webhooks', e);
+        return [];
+    }
+}

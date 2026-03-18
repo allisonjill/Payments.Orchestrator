@@ -1,4 +1,5 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
+import { getRecentWebhooks } from './api';
 import { StatusPanel } from './components/StatusPanel';
 import { PayinForm } from './components/PayinDemo/PayinForm';
 import { SessionResultPanel } from './components/PayinDemo/SessionResultPanel';
@@ -41,6 +42,42 @@ function App() {
 
   // I will refactor WebhookSimulator to accept `template` prop.
   const [simulatorTemplate, setSimulatorTemplate] = useState<{ eventType: string, data: string } | null>(null);
+
+  // Poll for real webhooks from backend
+  useEffect(() => {
+    const interval = setInterval(async () => {
+      const events = await getRecentWebhooks();
+      if (!events || events.length === 0) return;
+
+      setWebhookHistory((prev) => {
+        // Simple dedup based on JSON content signature since we lack unique IDs from backend (for now)
+        const existingSignatures = new Set(prev.map(p => JSON.stringify(p.payload.data)));
+        const newEvents = events.filter((e: any) => !existingSignatures.has(JSON.stringify(e.data)));
+
+        if (newEvents.length === 0) return prev;
+
+        const newItems: WebhookHistoryItem[] = newEvents.map((e: any) => ({
+          id: Date.now().toString() + Math.random(),
+          timestamp: new Date().toISOString(),
+          event_type: e.eventType,
+          payload: { event_type: e.eventType, data: e.data },
+          responseStatus: 200,
+          responseBody: 'Received via Hookdeck'
+        }));
+
+        const latest = newItems[0];
+        if (latest) {
+          if (latest.event_type === 'payin.succeeded') setStatus('succeeded');
+          else if (latest.event_type === 'payin.failed') setStatus('failed');
+          else if (latest.event_type === 'payin.processing') setStatus('processing');
+        }
+
+        return [...newItems, ...prev];
+      });
+    }, 3000);
+
+    return () => clearInterval(interval);
+  }, []);
 
   const triggerResend = async (item: WebhookHistoryItem) => {
     // Direct resend logic

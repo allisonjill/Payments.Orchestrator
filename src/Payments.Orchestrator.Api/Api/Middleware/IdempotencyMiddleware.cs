@@ -22,9 +22,12 @@ public class IdempotencyMiddleware
     {
         if (context.Request.Method != HttpMethods.Post)
         {
+            context.Request.EnableBuffering();
             await _next(context);
             return;
         }
+
+        context.Request.EnableBuffering();
 
         if (!context.Request.Headers.TryGetValue("Idempotency-Key", out var keyVal))
         {

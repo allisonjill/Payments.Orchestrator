@@ -9,6 +9,8 @@ using Payments.Orchestrator.Api.Infrastructure.Gateways;
 using Payments.Orchestrator.Api.Infrastructure.Persistence;
 using Payments.Orchestrator.Api.Infrastructure.Services;
 using Payments.Orchestrator.Api.RainforestConnector.Endpoints;
+using Payments.Orchestrator.Api.PayabliConnector;
+using Payments.Orchestrator.Api.PayabliConnector.Endpoints;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -38,6 +40,7 @@ builder.Services.AddSingleton<IPaymentRepository, InMemoryPaymentRepository>();
 
 
 builder.Services.AddRainforestConnector(builder.Configuration);
+builder.Services.AddPayabliConnector(builder.Configuration);
 
 var app = builder.Build();
 
@@ -57,5 +60,6 @@ app.MapHealthChecks("/health");
 
 app.MapPaymentEndpoints();
 app.MapRainforestEndpoints();
+app.MapPayabliEndpoints();
 
 app.Run();

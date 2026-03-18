@@ -7,6 +7,9 @@ namespace Payments.Orchestrator.Api.RainforestConnector.Endpoints;
 
 public static class RainforestEndpoints
 {
+    // In-memory store for demo purposes
+    private static readonly List<RainforestWebhookEnvelope> ReceivedEvents = new();
+
     public static void MapRainforestEndpoints(this IEndpointRouteBuilder app)
     {
         var group = app.MapGroup("/api");
@@ -60,6 +63,13 @@ public static class RainforestEndpoints
 
                 logger.LogInformation("Received Rainforest webhook: {EventType}", envelope.EventType);
 
+                // Store event for UI polling
+                lock (ReceivedEvents)
+                {
+                    ReceivedEvents.Insert(0, envelope); // Add to top
+                    if (ReceivedEvents.Count > 50) ReceivedEvents.RemoveAt(ReceivedEvents.Count - 1);
+                }
+
                 // Handle Event
                 switch (envelope.EventType)
                 {
@@ -85,6 +95,19 @@ public static class RainforestEndpoints
             }
         })
         .WithName("RainforestWebhook")
+        .WithOpenApi();
+
+        // GET Events for UI Polling
+        group.MapGet("/webhooks/rainforest/events", () => 
+        {
+            lock (ReceivedEvents) 
+            {
+                // Simple debug log to console (viewable in terminal)
+                Console.WriteLine($"[DEBUG] GET /events called. Count: {ReceivedEvents.Count}");
+                return Results.Ok(ReceivedEvents.ToList());
+            }
+        })
+        .WithName("GetRainforestWebhookEvents")
         .WithOpenApi();
     }
 }

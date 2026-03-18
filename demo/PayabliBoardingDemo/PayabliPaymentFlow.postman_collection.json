@@ -1,0 +1,165 @@
+{
+	"info": {
+		"_postman_id": "84d7a57-1934-4bc6-822e-dd10c057de04",
+		"name": "Payabli Payment Flow",
+		"description": "NOTE: Standard Payabli Authorize & Capture flow executed against your specific allocated Merchant ID (Paypoint).",
+		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+	},
+	"item": [
+		{
+			"name": "1. Authorize and Capture Transaction",
+			"event": [
+				{
+					"listen": "test",
+					"script": {
+						"exec": [
+							"var response = pm.response.json();",
+							"if (pm.response.code === 200 && (response.responseCode === \"00\" || response.responseCode === \"0\")) {",
+							"    pm.collectionVariables.set(\"transactionId\", response.responseData.transactionId);",
+							"    console.log(\"Transaction Successful! Transaction ID: \" + response.responseData.transactionId);",
+							"} else {",
+							"    console.error(\"Transaction Failed: \" + response.responseMessage);",
+							"}"
+						],
+						"type": "text/javascript"
+					}
+				}
+			],
+			"request": {
+				"method": "POST",
+				"header": [
+					{
+						"key": "requestToken",
+						"value": "{{PAYABLI_API_TOKEN}}",
+						"type": "text"
+					},
+					{
+						"key": "Content-Type",
+						"value": "application/json",
+						"type": "text"
+					}
+				],
+				"body": {
+					"mode": "raw",
+					"raw": "{\n  \"merchantId\": \"{{MERCHANT_ID}}\",\n  \"transactionType\": \"auth_capture\",\n  \"amount\": 10.50,\n  \"creditCard\": {\n    \"cardNumber\": \"{{TEST_CARD_NUMBER}}\",\n    \"expirationDate\": \"1225\",\n    \"cvv2\": \"123\"\n  },\n  \"billingAddress\": {\n    \"firstName\": \"John\",\n    \"lastName\": \"Smith\",\n    \"address1\": \"123 Main St\",\n    \"city\": \"Austin\",\n    \"state\": \"TX\",\n    \"zip\": \"73301\",\n    \"country\": \"USA\"\n  },\n  \"orderId\": \"PO-12345\"\n}",
+					"options": {
+						"raw": {
+							"language": "json"
+						}
+					}
+				},
+				"url": {
+					"raw": "https://api-sandbox.payabli.com/api/Transaction",
+					"protocol": "https",
+					"host": [
+						"api-sandbox",
+						"payabli",
+						"com"
+					],
+					"path": [
+						"api",
+						"Transaction"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "2. Void Transaction",
+			"request": {
+				"method": "POST",
+				"header": [
+					{
+						"key": "requestToken",
+						"value": "{{PAYABLI_API_TOKEN}}",
+						"type": "text"
+					},
+					{
+						"key": "Content-Type",
+						"value": "application/json",
+						"type": "text"
+					}
+				],
+				"body": {
+					"mode": "raw",
+					"raw": "{\n  \"merchantId\": \"{{MERCHANT_ID}}\",\n  \"transactionType\": \"void\",\n  \"transactionId\": \"{{transactionId}}\"\n}",
+					"options": {
+						"raw": {
+							"language": "json"
+						}
+					}
+				},
+				"url": {
+					"raw": "https://api-sandbox.payabli.com/api/Transaction",
+					"protocol": "https",
+					"host": [
+						"api-sandbox",
+						"payabli",
+						"com"
+					],
+					"path": [
+						"api",
+						"Transaction"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "3. Refund Transaction",
+			"request": {
+				"method": "POST",
+				"header": [
+					{
+						"key": "requestToken",
+						"value": "{{PAYABLI_API_TOKEN}}",
+						"type": "text"
+					},
+					{
+						"key": "Content-Type",
+						"value": "application/json",
+						"type": "text"
+					}
+				],
+				"body": {
+					"mode": "raw",
+					"raw": "{\n  \"merchantId\": \"{{MERCHANT_ID}}\",\n  \"transactionType\": \"refund\",\n  \"amount\": 10.50,\n  \"transactionId\": \"{{transactionId}}\"\n}",
+					"options": {
+						"raw": {
+							"language": "json"
+						}
+					}
+				},
+				"url": {
+					"raw": "https://api-sandbox.payabli.com/api/Transaction",
+					"protocol": "https",
+					"host": [
+						"api-sandbox",
+						"payabli",
+						"com"
+					],
+					"path": [
+						"api",
+						"Transaction"
+					]
+				}
+			},
+			"response": []
+		}
+	],
+	"variable": [
+		{
+			"key": "PAYABLI_API_TOKEN",
+			"value": "o.c+a3Aao1S8y6gJcfP5pMcx4QhsBhozNHCfH2u6QEK+4ZuYfp2QbIREkFZoanDcjqoJxkt5E9sGzzPW6gdgxkFuJxvXQXnCKuVwKU1/gPhlvIaBhJlux5UqeJ5JA2XJqxRDv4pfJNWXgWaWTG4Sjx+MlaFR+m3+qUQfWJZMAEWNyCzc7U3Jl8eOlpbs2HgYNGVrAfWY0a9giTVcPqWMHdoNGXkhBtvo9zoEqgTJhzg4Jd98Nin17hW2MtZJpTQsMqMZ8r552KkgyQLBzajc4Otx8G3L1PZHx5LmBC6a/xA5XkegEYVe7QIqgq6Ly9SePShoyYqp+1HmkEZEyLJ+7m1AC4kY29IpY4+xcY8oyS6xLwDC9nJyhV30Lk3zw5SCiS3v4Q678pyojT+mD24JXw/gZ4ZAZPftb3K/8hFYMIxyaGMSjA/ebkerUCLYTOD8ZMqyucBR65VfpZzlosgNWD7aceEQKz8O3QO/FyvDow6VdnIuQIRHZPtEbC1rC1TyCw.lp6TPNvMgn7sonJB9odMJ3GOZrO2f25yakKsh+oAKjA=",
+			"type": "string"
+		},
+		{
+			"key": "MERCHANT_ID",
+			"value": "8675309"
+		},
+		{
+			"key": "TEST_CARD_NUMBER",
+			"value": "4111111111111111"
+		}
+	]
+}
