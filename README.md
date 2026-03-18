@@ -84,3 +84,9 @@ Invoke-RestMethod -Uri "http://localhost:5200/api/v1/payments" -Method Post -Con
 # Second Request (Returns cached result)
 Invoke-RestMethod -Uri "http://localhost:5200/api/v1/payments" -Method Post -ContentType "application/json" -Body $body -Headers @{"Idempotency-Key"=$key}
 ```
+
+## Interactive UI Demo (Payabli)
+This project also includes a full-stack React implementation demonstrating the **Payabli Merchant Boarding Flow** and payment interactions. 
+
+Detailed setup instructions, environment variable configurations, and documentation for running the visual demo are located at:
+👉 **[`demo/PayabliDemoUI/README.md`](demo/PayabliDemoUI/README.md)**
