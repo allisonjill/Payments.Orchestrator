@@ -5,7 +5,7 @@ import type {
   PayabliAppLinkResponse
 } from '../types';
 
-const API_BASE_URL = 'http://localhost:5252';
+const API_BASE_URL = 'http://localhost:5114';
 
 export const boardingApi = {
   checkPaypoints: async (orgId: number): Promise<PayabliQueryPaypointsResponse> => {
